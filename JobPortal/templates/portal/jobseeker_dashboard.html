@@ -1,0 +1,49 @@
+{% extends 'portal/base.html' %}
+
+{% block title %}Dashboard - Job Portal{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-12 mb-4">
+        <h2 class="fw-bold">Welcome, {{ user.display_name }}!</h2>
+        <p class="text-muted">Explore jobs that match your skillset.</p>
+    </div>
+
+    <!-- Skill Matched Jobs -->
+    <div class="col-md-8 mb-4">
+        <div class="card p-4">
+            <h4 class="mb-4">Skill Matched Jobs</h4>
+            <div class="row">
+                {% for job in matched_jobs %}
+                    <div class="col-md-12 mb-3">
+                        <div class="border rounded p-3 bg-light">
+                            <h5 class="fw-bold">{{ job.title }}</h5>
+                            <p class="small text-muted mb-2">{{ job.category }} | Required: {{ job.required_skills }}</p>
+                            <a href="{% url 'apply_job' job.id %}" class="btn btn-sm btn-primary">Apply Now</a>
+                        </div>
+                    </div>
+                {% empty %}
+                    <p class="text-center text-muted py-3">Update your skills in profile to see matched jobs.</p>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+
+    <!-- My Applications -->
+    <div class="col-md-4 mb-4">
+        <div class="card p-4">
+            <h4 class="mb-4">My Applications</h4>
+            <ul class="list-group list-group-flush">
+                {% for app in applications %}
+                    <li class="list-group-item">
+                        <h6 class="mb-1 fw-bold">{{ app.job.title }}</h6>
+                        <small class="text-muted">Applied on {{ app.applied_at|date:"M d, Y" }}</small>
+                    </li>
+                {% empty %}
+                    <li class="list-group-item text-center text-muted">You haven't applied for any jobs yet.</li>
+                {% endfor %}
+            </ul>
+        </div>
+    </div>
+</div>
+{% endblock %}
