@@ -19,7 +19,11 @@
                         <div class="border rounded p-3 bg-light">
                             <h5 class="fw-bold">{{ job.title }}</h5>
                             <p class="small text-muted mb-2">{{ job.category }} | Required: {{ job.required_skills }}</p>
-                            <a href="{% url 'apply_job' job.id %}" class="btn btn-sm btn-primary">Apply Now</a>
+                            {% if job.id in applied_job_ids %}
+                                <button class="btn btn-sm btn-success disabled">Applied</button>
+                            {% else %}
+                                <a href="{% url 'apply_job' job.id %}" class="btn btn-sm btn-primary">Apply Now</a>
+                            {% endif %}
                         </div>
                     </div>
                 {% empty %}

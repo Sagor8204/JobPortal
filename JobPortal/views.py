@@ -75,12 +75,44 @@ def post_job_view(request):
     return render(request, 'portal/post_job.html', {'form': form})
 
 @login_required
+def edit_job_view(request, job_id):
+    job = get_object_or_404(Job, id=job_id, recruiter=request.user)
+    
+    if request.method == 'POST':
+        form = JobForm(request.POST, instance=job)
+        if form.is_valid():
+            form.save()
+            messages.success(request, "Job updated successfully!")
+            return redirect('dashboard')
+    else:
+        form = JobForm(instance=job)
+    return render(request, 'portal/edit_job.html', {'form': form, 'job': job})
+
+@login_required
+def delete_job_view(request, job_id):
+    job = get_object_or_404(Job, id=job_id, recruiter=request.user)
+    if request.method == 'POST':
+        job.delete()
+        messages.success(request, "Job deleted successfully!")
+        return redirect('dashboard')
+    return render(request, 'portal/delete_job_confirm.html', {'job': job})
+
+@login_required
 def job_list_view(request):
     query = request.GET.get('q', '')
     jobs = Job.objects.filter(
         Q(title__icontains=query) | Q(category__icontains=query) | Q(required_skills__icontains=query)
     ).order_by('-posted_at')
-    return render(request, 'portal/job_list.html', {'jobs': jobs, 'query': query})
+    
+    applied_job_ids = []
+    if request.user.user_type == 'JOBSEEKER':
+        applied_job_ids = list(Application.objects.filter(jobseeker=request.user).values_list('job_id', flat=True))
+
+    return render(request, 'portal/job_list.html', {
+        'jobs': jobs, 
+        'query': query,
+        'applied_job_ids': applied_job_ids
+    })
 
 @login_required
 def apply_job_view(request, job_id):
@@ -100,6 +132,7 @@ def apply_job_view(request, job_id):
 @login_required
 def dashboard_view(request):
     if request.user.user_type == 'JOBSEEKER':
+        applied_job_ids = list(Application.objects.filter(jobseeker=request.user).values_list('job_id', flat=True))
         try:
             profile = request.user.jobseeker_profile
             seeker_skills = set([s.strip().lower() for s in profile.skills.split(',')])
@@ -115,7 +148,8 @@ def dashboard_view(request):
         applications = Application.objects.filter(jobseeker=request.user)
         return render(request, 'portal/jobseeker_dashboard.html', {
             'matched_jobs': matched_jobs,
-            'applications': applications
+            'applications': applications,
+            'applied_job_ids': applied_job_ids
         })
     else:
         # Recruiter matching
